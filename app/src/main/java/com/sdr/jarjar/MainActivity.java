@@ -6,6 +6,8 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,11 +26,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final String TAG = MainActivity.class.getName();
     private GoogleApiClient mGoogleApiClient;
+
+    private RecyclerView recyclerView;
+    private MyAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +43,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         buildGoogleApiClient();
         mGoogleApiClient.connect();
 
-
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new MyAdapter();
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -156,12 +165,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.d(TAG, "Accuracy = "+location.getAccuracy());
         Log.d(TAG, "Provider = "+location.getProvider());
         Log.d(TAG, "Latitude = " + location.getLatitude());
-        Log.d(TAG, "Longitude = "+location.getLongitude());
+        Log.d(TAG, "Longitude = " + location.getLongitude());
 
 
-        // You can do this if you want
-        if (location.getAccuracy() < 30){
-            stopLocationUpdates();
+        Object lastItem = adapter.getLastItem();
+
+        if(lastItem instanceof Location){
+            if((((Location) lastItem).getAccuracy() - location.getAccuracy()) > 1){
+                adapter.addItem(new Object());
+            }
         }
+
+
+        adapter.addItem(location);
     }
 }
